@@ -1,7 +1,7 @@
 {
   "name": "shelftostove",
   "version": "1.0.0",
-  "description": "Hello World landing page for CS408 EC2 deployment",
+  "description": "Shelf-To-Stove: recipe manager with pantry-based search (CS408)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

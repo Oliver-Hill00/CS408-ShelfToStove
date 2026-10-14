@@ -1,0 +1,56 @@
+/* Shelf-To-Stove custom styles (on top of Bootstrap 5.3) */
+:root {
+  --sts-green: #2f5d50;
+  --sts-green-dark: #1f4037;
+  --sts-tomato: #d9603b;
+  --sts-cream: #faf6ef;
+}
+
+body { background: var(--sts-cream); }
+
+.text-tomato { color: var(--sts-tomato); }
+
+/* Hero */
+.hero {
+  background:
+    radial-gradient(circle at 15% 20%, rgba(217, 96, 59, .35), transparent 45%),
+    linear-gradient(135deg, var(--sts-green), var(--sts-green-dark));
+}
+.hero-lead { max-width: 36rem; opacity: .92; }
+.hero-note { opacity: .75; }
+.hero .btn:disabled { opacity: .85; }
+
+/* Feature cards */
+.card { border: 0; }
+.card-icon {
+  display: grid;
+  place-items: center;
+  height: 7rem;
+  font-size: 3rem;
+  border-radius: var(--bs-card-inner-border-radius) var(--bs-card-inner-border-radius) 0 0;
+}
+.bg-tomato-subtle { background: #fbe3da; color: var(--sts-tomato); }
+.bg-sage-subtle   { background: #dfeae4; color: var(--sts-green); }
+.bg-butter-subtle { background: #fbf0cf; color: #a67c00; }
+
+/* How it works */
+.step {
+  display: flex;
+  gap: .75rem;
+  align-items: flex-start;
+  height: 100%;
+  padding: 1rem;
+  background: #fff;
+  border-radius: .5rem;
+  box-shadow: var(--bs-box-shadow-sm);
+}
+.step-num {
+  flex: 0 0 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--sts-tomato);
+  color: #fff;
+  font-weight: 700;
+}
