@@ -116,8 +116,14 @@ dist
 # MacOS stupid stuff
 .DS_Store
 
-# The JSON "database" is created at runtime and belongs to each machine
+# The SQLite database is created at runtime and belongs to each machine
 data/
+*.db
+*.db-shm
+*.db-wal
+
+# User-uploaded recipe photos
+public/uploads/
 
 # SSH keys and TLS certificates (the AWS .pem key pair, self-signed certs, etc.)
 *.pem

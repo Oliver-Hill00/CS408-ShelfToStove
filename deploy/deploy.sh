@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Copies the code to the server and restarts it. Run FROM YOUR LAPTOP:
-#   ./deploy/deploy.sh -h <PUBLIC-IP> -i ~/keys/mykey.pem
+# Deploys the latest pushed code to the server. Run FROM YOUR LAPTOP after "git push":
+#   ./deploy/deploy.sh -h <PUBLIC-IP> -i ~/keys/Login.pem
+# Runs the tests, then on the server: git pull, npm ci, db:init (adds new tables), restart.
 set -euo pipefail
 
 APP_NAME="shelftostove"
@@ -18,37 +19,33 @@ while getopts "h:i:" opt; do
     *) usage ;;
   esac
 done
-[ -z "$HOST" ] || [ -z "$KEY" ] && usage
+{ [ -z "$HOST" ] || [ -z "$KEY" ]; } && usage
 [ -f "$KEY" ] || { echo "ERROR: key not found: $KEY" >&2; exit 1; }
-for tool in ssh tar curl npm; do
+for tool in ssh curl npm git; do
   command -v "$tool" >/dev/null || { echo "ERROR: $tool is not installed on this machine." >&2; exit 1; }
 done
 
 cd "$(dirname "$0")/.."
-SSH_OPTS=(-i "$KEY" -o StrictHostKeyChecking=accept-new)
+
+echo "==> Checking that your commits are pushed (the server pulls from GitHub)"
+git fetch --quiet origin
+if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+  echo "WARNING: you have uncommitted changes; they will NOT be deployed."
+fi
+if [ "$(git rev-parse HEAD)" != "$(git rev-parse '@{u}' 2>/dev/null || echo none)" ]; then
+  echo "WARNING: your branch differs from origin; run git push first or the server gets the old code."
+fi
 
 echo "==> Running tests"
 [ -d node_modules ] || npm install
 npm test
 
-echo "==> Copying code to ${REMOTE_USER}@${HOST}:${APP_DIR}"
-EXCLUDES=(--exclude=node_modules --exclude=.git --exclude='*.pem' --exclude=.env --exclude='.env.*')
-if command -v rsync >/dev/null 2>&1; then
-  rsync -az --delete "${EXCLUDES[@]}" -e "ssh ${SSH_OPTS[*]}" ./ "${REMOTE_USER}@${HOST}:${APP_DIR}/"
-else
-  # Git Bash on Windows has no rsync: clear old files (keep node_modules), then stream a tarball over ssh
-  echo "    (rsync not found, using tar over ssh)"
-  ssh "${SSH_OPTS[@]}" "${REMOTE_USER}@${HOST}" \
-    "find ${APP_DIR} -mindepth 1 -maxdepth 1 ! -name node_modules -exec rm -rf {} +"
-  tar -czf - "${EXCLUDES[@]}" . | ssh "${SSH_OPTS[@]}" "${REMOTE_USER}@${HOST}" "tar -xzf - -C ${APP_DIR}"
-fi
-
-echo "==> Installing dependencies and restarting service"
-ssh "${SSH_OPTS[@]}" "${REMOTE_USER}@${HOST}" \
-  "cd ${APP_DIR} && npm ci --omit=dev && sudo systemctl restart ${APP_NAME}"
+echo "==> Pulling and restarting on ${REMOTE_USER}@${HOST}"
+ssh -i "$KEY" -o StrictHostKeyChecking=accept-new "${REMOTE_USER}@${HOST}" \
+  "cd ${APP_DIR} && git pull --ff-only && npm ci --omit=dev && npm run db:init && sudo systemctl restart ${APP_NAME}"
 
 echo "==> Checking http://${HOST}/api/health"
-for i in 1 2 3 4 5; do
+for _ in 1 2 3 4 5; do
   if curl -fsS "http://${HOST}/api/health" >/dev/null; then
     echo "Deploy succeeded: http://${HOST}/"
     exit 0

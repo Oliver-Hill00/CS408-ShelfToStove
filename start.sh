@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-REQUIRED_NODE_MAJOR=18
+REQUIRED_NODE_MAJOR=20
 PORT="${PORT:-3000}"
 
 # 1. Check required tools
@@ -29,7 +29,9 @@ else
   npm install
 fi
 
-# 3. First-run setup: this app has no database, so nothing to create.
+# 3. First-run setup: create the SQLite tables and seed data (skipped if already seeded)
+npm run db:init
+npm run db:seed
 
 # 4. Start the app and print the URL
 echo "Starting app at http://localhost:${PORT}"
