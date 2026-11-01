@@ -1,0 +1,48 @@
+extends layout
+include partials/recipe-photo
+
+block content
+  - const badgeClass = { Have: 'text-bg-success', Low: 'text-bg-warning', Missing: 'text-bg-danger' };
+  .container.py-4
+    nav(aria-label='breadcrumb')
+      ol.breadcrumb.mb-2
+        li.breadcrumb-item
+          a(href='/recipes') Recipes
+        li.breadcrumb-item.active(aria-current='page')= recipe.title
+    h1.h2.mb-4= recipe.title
+
+    .row.g-4
+      .col-md-6
+        +recipePhoto(recipe, 'recipe-photo-large rounded')
+      .col-md-6
+        span.badge.text-bg-secondary.mb-3= recipe.category
+        ul.list-inline
+          li.list-inline-item Prep: #{recipe.prep_minutes} min
+          li.list-inline-item Cook: #{recipe.cook_minutes} min
+          li.list-inline-item Servings: #{recipe.servings}
+        if recipe.description
+          h2.h6 Description
+          p= recipe.description
+        .d-flex.flex-wrap.gap-2.mt-4
+          button.btn.btn-outline-secondary(type='button' disabled) Edit
+          button.btn.btn-outline-secondary(type='button' disabled) Delete
+          button.btn.btn-outline-secondary(type='button' disabled) Add Missing to Shopping List
+        p.small.text-body-secondary.mt-2.mb-0 Editing and the shopping list are coming soon.
+
+    .row.g-4.mt-2
+      .col-md-6
+        h2.h4 Ingredients
+        ul.list-group
+          each ingredient in ingredients
+            li.list-group-item.d-flex.justify-content-between.align-items-center.gap-2
+              span= ingredient.label
+              span.d-flex.align-items-center.gap-2.text-nowrap
+                if ingredient.note
+                  span.small.text-body-secondary= ingredient.note
+                span.badge(class=badgeClass[ingredient.status])= ingredient.status
+        p.small.text-body-secondary.mt-2 Have = enough &middot; Low = some, not enough &middot; Missing = none
+      .col-md-6
+        h2.h4 Instructions
+        ol
+          each step in steps
+            li.mb-2= step

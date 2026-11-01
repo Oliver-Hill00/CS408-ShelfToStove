@@ -1,0 +1,66 @@
+extends layout
+
+block content
+  section.hero.text-white
+    .container.py-5.text-center
+      h1.display-4.fw-bold Welcome to Shelf-To-Stove
+      p.lead.mx-auto.hero-lead Cook with what you already have. Track your pantry and find recipes that match it.
+      .d-flex.flex-wrap.justify-content-center.gap-2.mt-4
+        button.btn.btn-light.btn-lg(type='button' disabled)
+          i.bi.bi-egg-fried(aria-hidden='true')
+          |  What Can I Cook?
+        a.btn.btn-outline-light.btn-lg(href='/recipes')
+          i.bi.bi-journal-text(aria-hidden='true')
+          |  Browse Recipes
+
+  .container.py-5
+    .row.g-4
+      .col-md-4
+        .card.h-100.shadow-sm
+          .card-icon.bg-tomato-subtle
+            i.bi.bi-journal-richtext(aria-hidden='true')
+          .card-body
+            h2.h5.card-title Recipes
+            p.card-text.text-body-secondary #{recipeCount} #{recipeCount === 1 ? 'recipe' : 'recipes'} saved
+          .card-footer.bg-transparent.border-0.pb-3
+            a.btn.btn-outline-secondary(href='/recipes') View Recipes
+      .col-md-4
+        .card.h-100.shadow-sm
+          .card-icon.bg-sage-subtle
+            i.bi.bi-box-seam(aria-hidden='true')
+          .card-body
+            h2.h5.card-title My Pantry
+            p.card-text.text-body-secondary #{pantryCount} #{pantryCount === 1 ? 'item' : 'items'} in your pantry
+          .card-footer.bg-transparent.border-0.pb-3
+            button.btn.btn-outline-secondary(type='button' disabled) Coming soon
+      .col-md-4
+        .card.h-100.shadow-sm
+          .card-icon.bg-butter-subtle
+            i.bi.bi-cart3(aria-hidden='true')
+          .card-body
+            h2.h5.card-title Shopping List
+            p.card-text.text-body-secondary #{shoppingCount} #{shoppingCount === 1 ? 'item' : 'items'} to buy
+          .card-footer.bg-transparent.border-0.pb-3
+            button.btn.btn-outline-secondary(type='button' disabled) Coming soon
+
+    section.mt-5
+      h2.h4.mb-3 Expiring This Week
+      .table-responsive
+        table.table.align-middle.mb-0
+          thead.table-light
+            tr
+              th(scope='col') Ingredient
+              th(scope='col') Quantity
+              th(scope='col') Expires On
+          tbody
+            each item in expiring
+              tr
+                td= item.name
+                td= item.amount
+                td
+                  = item.expiresOn
+                  if item.expired
+                    span.badge.text-bg-danger.ms-2 Expired
+            else
+              tr
+                td.text-center.text-body-secondary.py-4(colspan='3') Nothing in your pantry expires in the next 7 days.

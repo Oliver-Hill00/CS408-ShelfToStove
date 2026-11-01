@@ -1,0 +1,7 @@
+//- A recipe's photo, or a placeholder until photo uploads arrive
+mixin recipePhoto(recipe, classes)
+  if recipe.image_path
+    img.recipe-photo(class=classes src=recipe.image_path alt=`Photo of ${recipe.title}`)
+  else
+    .recipe-photo.recipe-photo-empty(class=classes)
+      i.bi.bi-basket2(aria-hidden='true')

@@ -20,4 +20,11 @@ function openDb(dbPath = process.env.DB_PATH || DEFAULT_DB_PATH) {
   return db;
 }
 
-module.exports = { openDb, DEFAULT_DB_PATH };
+// Shared connection for the app, opened on first use
+let sharedDb;
+function getDb() {
+  if (!sharedDb) sharedDb = openDb();
+  return sharedDb;
+}
+
+module.exports = { openDb, getDb, DEFAULT_DB_PATH };

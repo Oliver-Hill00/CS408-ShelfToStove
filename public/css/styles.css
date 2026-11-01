@@ -17,7 +17,6 @@ body { background: var(--sts-cream); }
     linear-gradient(135deg, var(--sts-green), var(--sts-green-dark));
 }
 .hero-lead { max-width: 36rem; opacity: .92; }
-.hero-note { opacity: .75; }
 .hero .btn:disabled { opacity: .85; }
 
 /* Feature cards */
@@ -33,24 +32,18 @@ body { background: var(--sts-cream); }
 .bg-sage-subtle   { background: #dfeae4; color: var(--sts-green); }
 .bg-butter-subtle { background: #fbf0cf; color: #a67c00; }
 
-/* How it works */
-.step {
-  display: flex;
-  gap: .75rem;
-  align-items: flex-start;
-  height: 100%;
-  padding: 1rem;
-  background: #fff;
-  border-radius: .5rem;
-  box-shadow: var(--bs-box-shadow-sm);
+/* Recipe photos */
+.recipe-photo {
+  display: block;
+  width: 100%;
+  height: 11rem;
+  object-fit: cover;
 }
-.step-num {
-  flex: 0 0 2rem;
-  height: 2rem;
+.recipe-photo-large { height: 20rem; }
+.recipe-photo-empty {
   display: grid;
   place-items: center;
-  border-radius: 50%;
-  background: var(--sts-tomato);
-  color: #fff;
-  font-weight: 700;
+  font-size: 3rem;
+  background: #efe7d8;
+  color: #a89a80;
 }

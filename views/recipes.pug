@@ -1,0 +1,34 @@
+extends layout
+include partials/recipe-photo
+
+block content
+  .container.py-4
+    .d-flex.justify-content-between.align-items-center.mb-4
+      h1.h2.mb-0 All Recipes
+      button.btn.btn-outline-secondary(type='button' disabled) + Add Recipe
+
+    if recipes.length
+      .row.row-cols-1.row-cols-sm-2.row-cols-lg-3.g-4
+        each recipe in recipes
+          .col
+            .card.h-100.shadow-sm
+              +recipePhoto(recipe, 'rounded-top')
+              .card-body
+                h2.h5.card-title= recipe.title
+                span.badge.text-bg-secondary.me-2= recipe.category
+                span.small.text-body-secondary Total: #{recipe.total_minutes} min
+              .card-footer.bg-transparent.border-0.pb-3
+                a.btn.btn-outline-secondary.stretched-link(href=`/recipes/${recipe.id}`) View Recipe
+
+      if totalPages > 1
+        nav.mt-4(aria-label='Recipe pages')
+          ul.pagination.justify-content-center
+            li.page-item(class=page === 1 ? 'disabled' : undefined)
+              a.page-link(href=`/recipes?page=${page - 1}`) &laquo; Prev
+            - for (let n = 1; n <= totalPages; n++)
+              li.page-item(class=n === page ? 'active' : undefined)
+                a.page-link(href=`/recipes?page=${n}` aria-current=n === page ? 'page' : undefined)= n
+            li.page-item(class=page === totalPages ? 'disabled' : undefined)
+              a.page-link(href=`/recipes?page=${page + 1}`) Next &raquo;
+    else
+      p.text-body-secondary No recipes yet.

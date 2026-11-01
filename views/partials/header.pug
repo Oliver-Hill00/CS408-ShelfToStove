@@ -1,0 +1,27 @@
+//- Links without an href are pages from later checkpoints, shown disabled until they exist
+-
+  const links = [
+    { label: 'Home', href: '/' },
+    { label: 'Recipes', href: '/recipes' },
+    { label: 'Search' },
+    { label: 'What Can I Cook?' },
+    { label: 'Pantry' },
+    { label: 'Shopping List' },
+    { label: 'About', href: '/about' },
+  ];
+nav.navbar.navbar-expand-lg.bg-body.border-bottom
+  .container
+    a.navbar-brand.fw-bold.d-flex.align-items-center.gap-2(href='/')
+      i.bi.bi-basket2-fill.text-tomato(aria-hidden='true')
+      | Shelf-To-Stove
+    button.navbar-toggler(type='button' data-bs-toggle='collapse' data-bs-target='#mainNav' aria-controls='mainNav' aria-expanded='false' aria-label='Toggle navigation')
+      span.navbar-toggler-icon
+    #mainNav.collapse.navbar-collapse
+      ul.navbar-nav.ms-auto
+        each link in links
+          li.nav-item
+            if link.href
+              - const active = link.href === '/' ? currentPath === '/' : currentPath.startsWith(link.href);
+              a.nav-link(href=link.href class=active ? 'active' : undefined aria-current=active ? 'page' : undefined)= link.label
+            else
+              a.nav-link.disabled(aria-disabled='true')= link.label

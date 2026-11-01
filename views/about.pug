@@ -1,0 +1,34 @@
+extends layout
+
+block content
+  .container.py-4
+    h1.h2.mb-4 About Shelf-To-Stove
+    .row.g-4
+      .col-md-7
+        p Shelf-To-Stove is a recipe manager built around one question: what can I cook with the food I already have? Store your recipes, keep a live inventory of your pantry, and find recipes by how well they match what is on hand.
+        p It is made for college students cooking on a budget, roommates sharing a kitchen, and anyone trying to use food before it expires. It is a CS 408 Full Stack Web Development project.
+
+        h2.h4.mt-4 Tech Stack
+        ul
+          li Node.js 24 + Express 5
+          li SQLite (better-sqlite3)
+          li Pug templates + Bootstrap 5.3
+          li Hosted on AWS EC2 (Ubuntu 24.04) behind Nginx
+
+        h2.h4.mt-4 Credits
+        ul
+          li
+            a(href='https://getbootstrap.com') Bootstrap
+            |  (MIT License)
+          li
+            a(href='https://icons.getbootstrap.com') Bootstrap Icons
+            |  (MIT License)
+          li Seed recipes written by Oliver Hill
+      .col-md-5
+        .card.shadow-sm
+          .card-icon.bg-sage-subtle
+            i.bi.bi-basket2-fill(aria-hidden='true')
+          .card-body
+            h2.h5.card-title Source code
+            p.card-text.text-body-secondary The full project is on GitHub.
+            a.btn.btn-outline-secondary(href='https://github.com/Oliver-Hill00/CS408-ShelfToStove') GitHub Repo
