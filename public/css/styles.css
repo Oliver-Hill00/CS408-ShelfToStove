@@ -32,6 +32,14 @@ body { background: var(--sts-cream); }
 .bg-sage-subtle   { background: #dfeae4; color: var(--sts-green); }
 .bg-butter-subtle { background: #fbf0cf; color: #a67c00; }
 
+/* Add / Edit Recipe form */
+.photo-drop {
+  border: 2px dashed var(--bs-border-color);
+  border-radius: .5rem;
+  background: #fff;
+}
+.photo-preview { max-height: 8rem; }
+
 /* Recipe photos */
 .recipe-photo {
   display: block;

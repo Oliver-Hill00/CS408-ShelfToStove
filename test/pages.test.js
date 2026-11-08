@@ -85,6 +85,20 @@ test("Recipe Detail escapes text from the database", async () => {
   db.prepare("DELETE FROM recipes WHERE id = ?").run(lastInsertRowid);
 });
 
+test("Add Recipe form renders with categories, units, ingredient rows, and autocomplete", async () => {
+  const { status, html } = await getPage("/recipes/new");
+  assert.strictEqual(status, 200);
+  assert.match(html, /<form id="recipe-form" method="post" action="\/recipes" enctype="multipart\/form-data"/);
+  assert.match(html, /<option value="\d+">Breakfast<\/option>/);
+  assert.match(html, /<optgroup label="Weight" data-measure="weight">/);
+  assert.match(html, /<option value="tbsp">tbsp \(tablespoon\)<\/option>/);
+  assert.strictEqual((html.match(/class="row g-2 align-items-start mb-2 ingredient-row"/g) || []).length, 4); // 3 rows + template
+  assert.match(html, /name="ingredients\[2\]\[quantity\]"/);
+  assert.match(html, /<option value="cooked rice" data-measure="volume">/);
+  assert.match(html, /<script src="\/js\/recipe-form.js">/);
+  assert.doesNotMatch(html, /Delete Recipe/);
+});
+
 test("Unknown pages and recipes return the 404 page in the shared layout", async () => {
   for (const path of ["/nope", "/recipes/9999", "/recipes/abc"]) {
     const { status, html } = await getPage(path);

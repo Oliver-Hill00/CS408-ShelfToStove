@@ -1,0 +1,114 @@
+extends layout
+
+//- Shared by Add Recipe and Edit Recipe. Errors are keyed by field paths
+
+mixin fieldError(key)
+  if errors[key]
+    .invalid-feedback.d-block= errors[key]
+
+mixin ingredientRow(ingredient, i)
+  - const key = (field) => `ingredients[${i}].${field}`;
+  - const invalid = (field) => (errors[key(field)] ? 'is-invalid' : undefined);
+  .row.g-2.align-items-start.mb-2.ingredient-row
+    .col-12.col-md-6
+      label.visually-hidden(for=`ingredient-${i}-name`) Ingredient
+      input.form-control.ingredient-name(id=`ingredient-${i}-name` type='text' name=`ingredients[${i}][name]` value=ingredient.name placeholder='Ingredient name' list='ingredient-names' autocomplete='off' class=invalid('name'))
+      +fieldError(key('name'))
+    .col-5.col-md-2
+      label.visually-hidden(for=`ingredient-${i}-quantity`) Quantity
+      input.form-control(id=`ingredient-${i}-quantity` type='number' name=`ingredients[${i}][quantity]` value=ingredient.quantity placeholder='Qty' min='0' step='any' class=invalid('quantity'))
+      +fieldError(key('quantity'))
+    .col-5.col-md-3
+      label.visually-hidden(for=`ingredient-${i}-unit`) Unit
+      select.form-select.ingredient-unit(id=`ingredient-${i}-unit` name=`ingredients[${i}][unit]` class=invalid('unit'))
+        option(value='') Unit
+        each group in [['volume', 'Volume'], ['weight', 'Weight'], ['count', 'Count']]
+          optgroup(label=group[1] data-measure=group[0])
+            each unit in units.filter((u) => u.measure_type === group[0])
+              option(value=unit.code selected=unit.code === ingredient.unit)= unit.code === unit.label ? unit.code : `${unit.code} (${unit.label})`
+      +fieldError(key('unit'))
+    .col-2.col-md-1
+      button.btn.btn-outline-danger.w-100.remove-ingredient(type='button' aria-label='Remove ingredient')
+        i.bi.bi-x-lg(aria-hidden='true')
+
+block content
+  - const isEdit = Boolean(recipe.id);
+  - const invalid = (key) => (errors[key] ? 'is-invalid' : undefined);
+  .container.py-4
+    h1.h2.mb-4= title
+
+    if Object.keys(errors).length
+      .alert.alert-danger(role='alert') Please fix the highlighted fields below.
+
+    form#recipe-form(method='post' action=action enctype='multipart/form-data' novalidate)
+      .row.g-4
+        .col-lg-6
+          .mb-3
+            label.form-label(for='title') Title
+            input#title.form-control(type='text' name='title' value=recipe.title placeholder='Recipe title' maxlength='120' required class=invalid('title'))
+            +fieldError('title')
+          .mb-3
+            label.form-label(for='category_id') Category
+            select#category_id.form-select(name='category_id' required class=invalid('category_id'))
+              option(value='' selected=!recipe.category_id) Select category
+              each category in categories
+                option(value=category.id selected=String(category.id) === String(recipe.category_id))= category.name
+            +fieldError('category_id')
+          .mb-3
+            label.form-label(for='description') Description
+            textarea#description.form-control(name='description' rows='3' maxlength='500' placeholder='Short description' class=invalid('description'))= recipe.description
+            +fieldError('description')
+          .row.g-3
+            each field in [['prep_minutes', 'Prep (min)', 0], ['cook_minutes', 'Cook (min)', 0], ['servings', 'Servings', 1]]
+              .col-4
+                label.form-label(for=field[0])= field[1]
+                input.form-control(id=field[0] type='number' name=field[0] value=recipe[field[0]] min=field[2] step='1' required class=invalid(field[0]))
+                +fieldError(field[0])
+
+        .col-lg-6
+          .mb-3
+            label.form-label(for='photo')= isEdit && recipe.image_path ? 'Replace Photo' : 'Photo'
+            .photo-drop.p-3.text-center(class=errors.photo ? 'border-danger' : undefined)
+              if recipe.image_path
+                img.img-thumbnail.mb-2.photo-preview(src=recipe.image_path alt=`Current photo of ${recipe.title}`)
+              p.small.text-body-secondary.mb-2 JPG or PNG, max 2 MB
+              input#photo.form-control(type='file' name='photo' accept='image/jpeg,image/png' class=invalid('photo'))
+              +fieldError('photo')
+              if recipe.image_path
+                p.small.text-body-secondary.mt-2.mb-0 Leave empty to keep the current photo.
+          .mb-3
+            label.form-label(for='instructions') Instructions
+            textarea#instructions.form-control(name='instructions' rows='9' placeholder='One step per line' required class=invalid('instructions'))= recipe.instructions
+            +fieldError('instructions')
+
+      h2.h4.mt-4.mb-3 Ingredients
+      +fieldError('ingredients')
+      .row.g-2.small.fw-semibold.mb-1.d-none.d-md-flex
+        .col-md-6 Ingredient
+        .col-md-2 Quantity
+        .col-md-3 Unit
+      #ingredient-rows
+        each ingredient, i in ingredients
+          +ingredientRow(ingredient, i)
+      button#add-ingredient.btn.btn-outline-secondary.mt-2(type='button') + Add Ingredient
+
+      //- Copied by recipe-form.js for each new row; __INDEX__ becomes the row number
+      template#ingredient-row-template
+        +ingredientRow({ name: '', quantity: '', unit: '' }, '__INDEX__')
+
+      hr.my-4
+      .d-flex.flex-wrap.gap-2
+        button.btn.btn-primary(type='submit')= isEdit ? 'Save Changes' : 'Save Recipe'
+        a.btn.btn-outline-secondary(href=isEdit ? `/recipes/${recipe.id}` : '/recipes') Cancel
+        if isEdit
+          button.btn.btn-outline-danger.ms-auto(type='submit' form='delete-form') Delete Recipe
+
+    if isEdit
+      form#delete-form(method='post' action=`/recipes/${recipe.id}/delete` data-confirm="Delete this recipe? This can't be undone.")
+
+  datalist#ingredient-names
+    each known in knownIngredients
+      option(value=known.name data-measure=known.measure_type)
+
+block scripts
+  script(src='/js/recipe-form.js')

@@ -5,7 +5,9 @@ block content
   .container.py-4
     .d-flex.justify-content-between.align-items-center.mb-4
       h1.h2.mb-0 All Recipes
-      button.btn.btn-outline-secondary(type='button' disabled) + Add Recipe
+      a.btn.btn-outline-secondary(href='/recipes/new') + Add Recipe
+    if deleted
+      .alert.alert-success(role='status') Recipe deleted.
 
     if recipes.length
       .row.row-cols-1.row-cols-sm-2.row-cols-lg-3.g-4
@@ -26,9 +28,9 @@ block content
             li.page-item(class=page === 1 ? 'disabled' : undefined)
               a.page-link(href=`/recipes?page=${page - 1}`) &laquo; Prev
             - for (let n = 1; n <= totalPages; n++)
-              li.page-item(class=n === page ? 'active' : undefined)
+              li.page-item(class =n === page ? 'active' : undefined)
                 a.page-link(href=`/recipes?page=${n}` aria-current=n === page ? 'page' : undefined)= n
-            li.page-item(class=page === totalPages ? 'disabled' : undefined)
+            li.page-item(class = page === totalPages ? 'disabled' : undefined)
               a.page-link(href=`/recipes?page=${page + 1}`) Next &raquo;
     else
       p.text-body-secondary No recipes yet.

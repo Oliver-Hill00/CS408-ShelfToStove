@@ -10,6 +10,8 @@ block content
           a(href='/recipes') Recipes
         li.breadcrumb-item.active(aria-current='page')= recipe.title
     h1.h2.mb-4= recipe.title
+    if saved
+      .alert.alert-success(role='status') Recipe saved.
 
     .row.g-4
       .col-md-6
@@ -24,10 +26,11 @@ block content
           h2.h6 Description
           p= recipe.description
         .d-flex.flex-wrap.gap-2.mt-4
-          button.btn.btn-outline-secondary(type='button' disabled) Edit
-          button.btn.btn-outline-secondary(type='button' disabled) Delete
+          a.btn.btn-outline-secondary(href=`/recipes/${recipe.id}/edit`) Edit
+          form(method='post' action=`/recipes/${recipe.id}/delete` data-confirm="Delete this recipe? This can't be undone.")
+            button.btn.btn-outline-danger(type='submit') Delete
           button.btn.btn-outline-secondary(type='button' disabled) Add Missing to Shopping List
-        p.small.text-body-secondary.mt-2.mb-0 Editing and the shopping list are coming soon.
+        p.small.text-body-secondary.mt-2.mb-0 Add Missing to Shopping List is coming soon.
 
     .row.g-4.mt-2
       .col-md-6
