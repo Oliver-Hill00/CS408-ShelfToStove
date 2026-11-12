@@ -1,0 +1,23 @@
+//- Pieces shared by the recipe, pantry, and shopping list forms. They expect `units` and
+//- `knownIngredients` from lib/ingredients.js ingredientOptions(). public/js/unit-filter.js
+//- narrows each .ingredient-unit to the measure type of the .ingredient-name in the same .ingredient-row.
+
+//- Unit dropdown grouped by measure type. Pass id, name, class, etc. as attributes.
+mixin unitSelect(selected, placeholder = 'Unit')
+  select.form-select.ingredient-unit&attributes(attributes)
+    option(value='')= placeholder
+    each group in [['volume', 'Volume'], ['weight', 'Weight'], ['count', 'Count']]
+      optgroup(label=group[1] data-measure=group[0])
+        each unit in units.filter((u) => u.measure_type === group[0])
+          option(value=unit.code selected=unit.code === selected)= unit.code === unit.label ? unit.code : `${unit.code} (${unit.label})`
+
+//- Autocomplete list for every .ingredient-name input (list='ingredient-names')
+mixin ingredientDatalist()
+  datalist#ingredient-names
+    each known in knownIngredients
+      option(value=known.name data-measure=known.measure_type)
+
+//- An error message under a field, if there is one
+mixin errorText(message)
+  if message
+    .invalid-feedback.d-block= message

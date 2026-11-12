@@ -2,6 +2,8 @@ const express = require("express");
 const path = require("path");
 const pagesRouter = require("./routes/pages");
 const recipesRouter = require("./routes/recipes");
+const pantryRouter = require("./routes/pantry");
+const shoppingRouter = require("./routes/shopping");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -11,6 +13,9 @@ app.set("views", path.join(__dirname, "views"));
 
 // CSS, images, and uploaded photos
 app.use(express.static(path.join(__dirname, "public")));
+
+// Plain form posts (pantry, shopping list). Recipe forms are multipart and use Multer instead.
+app.use(express.urlencoded({ extended: false }));
 
 // Values every view needs for the shared header and footer
 app.use((req, res, next) => {
@@ -26,6 +31,8 @@ app.get("/api/health", (req, res) => {
 
 app.use("/", pagesRouter);
 app.use("/recipes", recipesRouter);
+app.use("/pantry", pantryRouter);
+app.use("/shopping-list", shoppingRouter);
 
 app.use((req, res) => {
   res.status(404).render("error", {

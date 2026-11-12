@@ -1,0 +1,94 @@
+extends layout
+include partials/ingredient-fields
+
+//- Quantity, Unit, Expires On, and Staple fields, used by the Add form and each row's Edit form
+mixin itemFields(prefix, values, errors)
+  - const invalid = (field) => (errors[field] ? 'is-invalid' : undefined);
+  .col-6.col-md-2
+    label.form-label.small.fw-semibold(for=`${prefix}-quantity`) Quantity
+    input.form-control(id=`${prefix}-quantity` type='number' name='quantity' value=values.quantity min='0' step='any' placeholder='0' class=invalid('quantity'))
+    +errorText(errors.quantity)
+  .col-6.col-md-2
+    label.form-label.small.fw-semibold(for=`${prefix}-unit`) Unit
+    +unitSelect(values.unit)(id=`${prefix}-unit` name='unit' class=invalid('unit'))
+    +errorText(errors.unit)
+  .col-7.col-md-2
+    label.form-label.small.fw-semibold(for=`${prefix}-expires`) Expires On
+    input.form-control(id=`${prefix}-expires` type='date' name='expires_on' value=values.expires_on class=invalid('expires_on'))
+    +errorText(errors.expires_on)
+  .col-5.col-md-1
+    .form-label.small.fw-semibold Staple
+    .form-check.mt-2
+      input.form-check-input(id=`${prefix}-staple` type='checkbox' name='is_staple' value='on' checked=Number(values.is_staple) === 1)
+      label.form-check-label(for=`${prefix}-staple`) Yes
+
+block content
+  - const hasErrors = Object.keys(add.errors).length || (edit && Object.keys(edit.errors).length);
+  .container.py-4
+    h1.h2.mb-4 My Pantry
+
+    if notice
+      .alert.alert-success(role='status')= notice
+    if hasErrors
+      .alert.alert-danger(role='alert') Please fix the highlighted fields below.
+
+    form.card.card-body.bg-body-tertiary.mb-4(method='post' action='/pantry' novalidate aria-label='Add a pantry item')
+      .row.g-2.align-items-start.ingredient-row
+        .col-12.col-md-4
+          label.form-label.small.fw-semibold(for='add-name') Ingredient
+          input#add-name.form-control.ingredient-name(type='text' name='name' value=add.values.name list='ingredient-names' autocomplete='off' maxlength='60' placeholder='Start typing an ingredient…' class=add.errors.name ? 'is-invalid' : undefined)
+          +errorText(add.errors.name)
+        +itemFields('add', add.values, add.errors)
+        .col-12.col-md-1.d-grid
+          span.form-label.small.d-none.d-md-block &nbsp;
+          button.btn.btn-primary(type='submit') Add Item
+
+    .table-responsive
+      table.table.align-middle
+        thead.table-light
+          tr
+            th(scope='col') Ingredient
+            th(scope='col') Quantity
+            th(scope='col') Unit
+            th(scope='col') Staple
+            th(scope='col') Expires On
+            th.text-end(scope='col') Actions
+        tbody
+          each item in items
+            - const editing = Boolean(edit) && edit.id === item.id;
+            - const values = editing ? edit.values : { quantity: item.quantity ?? '', unit: item.unit ?? '', expires_on: item.expires_on ?? '', is_staple: item.is_staple };
+            tr
+              td= item.name
+              td= item.quantityText
+              td= item.unitText
+              td= item.is_staple ? 'Yes' : ''
+              td.text-nowrap
+                = item.expiresText
+                if item.expired
+                  span.badge.text-bg-danger.ms-2 Expired
+                else if item.soon
+                  span.badge.text-bg-warning.ms-2 Soon
+              td.text-end.text-nowrap
+                button.btn.btn-sm.btn-outline-secondary(type='button' data-bs-toggle='collapse' data-bs-target=`#edit-${item.id}` aria-expanded=editing ? 'true' : 'false' aria-controls=`edit-${item.id}`) Edit
+                form.d-inline.ms-1(method='post' action=`/pantry/${item.id}/delete` data-confirm=`Remove ${item.name} from your pantry?`)
+                  button.btn.btn-sm.btn-outline-danger(type='submit') Delete
+            tr.collapse(id=`edit-${item.id}` class=editing ? 'show' : undefined)
+              td.bg-body-tertiary(colspan='6')
+                form(method='post' action=`/pantry/${item.id}/edit` novalidate aria-label=`Edit ${item.name}`)
+                  .row.g-2.align-items-start.ingredient-row
+                    input.ingredient-name(type='hidden' value=item.name)
+                    .col-12.col-md-2
+                      span.form-label.small.fw-semibold.d-block Ingredient
+                      p.mt-2.mb-0.fw-semibold= item.name
+                    +itemFields(`edit-${item.id}`, values, editing ? edit.errors : {})
+                    .col-12.col-md-3.d-flex.gap-2.align-items-end.align-self-end
+                      button.btn.btn-sm.btn-primary(type='submit') Save
+                      button.btn.btn-sm.btn-outline-secondary(type='button' data-bs-toggle='collapse' data-bs-target=`#edit-${item.id}`) Cancel
+          else
+            tr
+              td.text-center.text-body-secondary.py-4(colspan='6') Your pantry is empty. Add your first item above.
+
+    p.small.text-body-secondary.mb-1 Sorted by expiration date. "Soon" = expires within 7 days. The unit list only shows units for the ingredient's type (volume, weight, or count).
+    p.small.text-body-secondary Staples (salt, oil, sauces) always count as on hand, so their quantity is optional.
+
+  +ingredientDatalist()

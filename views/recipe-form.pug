@@ -1,4 +1,5 @@
 extends layout
+include partials/ingredient-fields
 
 //- Shared by Add Recipe and Edit Recipe. Errors are keyed by field paths
 
@@ -20,12 +21,7 @@ mixin ingredientRow(ingredient, i)
       +fieldError(key('quantity'))
     .col-5.col-md-3
       label.visually-hidden(for=`ingredient-${i}-unit`) Unit
-      select.form-select.ingredient-unit(id=`ingredient-${i}-unit` name=`ingredients[${i}][unit]` class=invalid('unit'))
-        option(value='') Unit
-        each group in [['volume', 'Volume'], ['weight', 'Weight'], ['count', 'Count']]
-          optgroup(label=group[1] data-measure=group[0])
-            each unit in units.filter((u) => u.measure_type === group[0])
-              option(value=unit.code selected=unit.code === ingredient.unit)= unit.code === unit.label ? unit.code : `${unit.code} (${unit.label})`
+      +unitSelect(ingredient.unit)(id=`ingredient-${i}-unit` name=`ingredients[${i}][unit]` class=invalid('unit'))
       +fieldError(key('unit'))
     .col-2.col-md-1
       button.btn.btn-outline-danger.w-100.remove-ingredient(type='button' aria-label='Remove ingredient')
@@ -106,9 +102,7 @@ block content
     if isEdit
       form#delete-form(method='post' action=`/recipes/${recipe.id}/delete` data-confirm="Delete this recipe? This can't be undone.")
 
-  datalist#ingredient-names
-    each known in knownIngredients
-      option(value=known.name data-measure=known.measure_type)
+  +ingredientDatalist()
 
 block scripts
   script(src='/js/recipe-form.js')

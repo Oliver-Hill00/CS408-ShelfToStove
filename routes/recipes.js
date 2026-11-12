@@ -6,6 +6,7 @@ const multer = require("multer");
 const { body, validationResult } = require("express-validator");
 const { getDb } = require("../db/db");
 const { formatAmount, formatIngredient } = require("../lib/format");
+const { cleanName, unitProblem, findOrCreateIngredient, toBase, ingredientOptions } = require("../lib/ingredients");
 
 const PAGE_SIZE = 12;
 const UPLOAD_DIR = path.join(__dirname, "..", "public", "uploads");
@@ -35,8 +36,7 @@ function pantryStatus(row) {
 function formOptions(db) {
   return {
     categories: db.prepare("SELECT id, name FROM categories ORDER BY name").all(),
-    units: db.prepare("SELECT code, label, measure_type FROM units ORDER BY measure_type, to_base").all(),
-    knownIngredients: db.prepare("SELECT name, measure_type FROM ingredients ORDER BY name").all(),
+    ...ingredientOptions(),
   };
 }
 
@@ -63,7 +63,7 @@ function compactIngredients(raw) {
   if (!raw || typeof raw !== "object") return [];
   return Object.values(raw)
     .filter((row) => row && typeof row === "object")
-    .map((row) => ({ name: text(row.name).replace(/\s+/g, " "), quantity: text(row.quantity), unit: text(row.unit) }))
+    .map((row) => ({ name: cleanName(row.name), quantity: text(row.quantity), unit: text(row.unit) }))
     .filter((row) => row.name || row.quantity || row.unit);
 }
 
@@ -80,18 +80,9 @@ function receiveForm(req, res, next) {
 
 const rowIndex = (fieldPath) => Number(fieldPath.match(/\[(\d+)\]/)[1]);
 
-// A unit must exist, and a known ingredient must use a unit of its measure type (no cups of chicken).
-// A new ingredient takes its measure type from the unit chosen.
 function checkUnit(unit, { req, path: fieldPath }) {
-  const db = getDb();
-  const unitRow = db.prepare("SELECT measure_type FROM units WHERE code = ?").get(unit);
-  if (!unitRow) throw new Error("Choose a unit from the list.");
-  const name = req.body.ingredients[rowIndex(fieldPath)].name;
-  const measure = db.prepare("SELECT measure_type FROM ingredients WHERE name = ?").pluck().get(name);
-  if (measure && measure !== unitRow.measure_type) {
-    const allowed = db.prepare("SELECT code FROM units WHERE measure_type = ? ORDER BY to_base").pluck().all(measure);
-    throw new Error(`Use a ${measure} unit (${allowed.join(", ")}).`);
-  }
+  const problem = unitProblem(req.body.ingredients[rowIndex(fieldPath)].name, unit);
+  if (problem) throw new Error(problem);
   return true;
 }
 
@@ -185,18 +176,12 @@ function removePhoto(imagePath) {
 
 // Inserts a recipe's ingredient rows, adding any new ingredient names, with qty_base in base units
 function insertIngredientRows(db, recipeId, rows) {
-  const unitOf = db.prepare("SELECT measure_type, to_base FROM units WHERE code = ?");
-  const findIngredient = db.prepare("SELECT id FROM ingredients WHERE name = ?").pluck();
-  const addIngredient = db.prepare("INSERT INTO ingredients (name, measure_type) VALUES (?, ?)");
   const addRow = db.prepare(
     "INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity, unit, qty_base) VALUES (?, ?, ?, ?, ?)"
   );
   for (const row of rows) {
-    const unit = unitOf.get(row.unit);
-    const name = row.name.toLowerCase();
-    const ingredientId = findIngredient.get(name) ?? addIngredient.run(name, unit.measure_type).lastInsertRowid;
     const quantity = Number(row.quantity);
-    addRow.run(recipeId, ingredientId, quantity, row.unit, quantity * unit.to_base);
+    addRow.run(recipeId, findOrCreateIngredient(db, row.name, row.unit), quantity, row.unit, toBase(quantity, row.unit));
   }
 }
 

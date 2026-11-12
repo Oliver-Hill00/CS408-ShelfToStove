@@ -1,0 +1,57 @@
+extends layout
+include partials/ingredient-fields
+
+block content
+  - const invalid = (field) => (errors[field] ? 'is-invalid' : undefined);
+  .container.py-4
+    h1.h2.mb-4 Shopping List
+
+    if notice
+      .alert.alert-success(role='status')= notice
+    if Object.keys(errors).length
+      .alert.alert-danger(role='alert') Please fix the highlighted fields below.
+
+    form.card.card-body.bg-body-tertiary.mb-4(method='post' action='/shopping-list' novalidate aria-label='Add a shopping list item')
+      .row.g-2.align-items-start.ingredient-row
+        .col-12.col-md-6
+          label.form-label.small.fw-semibold(for='item-name') Item
+          input#item-name.form-control.ingredient-name(type='text' name='name' value=values.name list='ingredient-names' autocomplete='off' maxlength='60' placeholder='Start typing an ingredient…' class=invalid('name'))
+          +errorText(errors.name)
+        .col-6.col-md-2
+          label.form-label.small.fw-semibold(for='item-quantity') Quantity
+          input#item-quantity.form-control(type='number' name='quantity' value=values.quantity min='0' step='any' placeholder='Optional' class=invalid('quantity'))
+          +errorText(errors.quantity)
+        .col-6.col-md-2
+          label.form-label.small.fw-semibold(for='item-unit') Unit
+          +unitSelect(values.unit)(id='item-unit' name='unit' class=invalid('unit'))
+          +errorText(errors.unit)
+        .col-12.col-md-2.d-grid
+          span.form-label.small.d-none.d-md-block &nbsp;
+          button.btn.btn-primary(type='submit') Add to List
+
+    if items.length
+      ul.list-group.mb-3
+        each item in items
+          li.list-group-item.d-flex.align-items-center.gap-3
+            form(method='post' action=`/shopping-list/${item.id}/toggle`)
+              button.btn.btn-link.p-0.fs-4.lh-1.text-body.toggle-item(type='submit' aria-pressed=item.checked ? 'true' : 'false' aria-label=item.checked ? `Mark ${item.name} as not bought` : `Mark ${item.name} as bought`)
+                i.bi(class=item.checked ? 'bi-check-square-fill text-success' : 'bi-square' aria-hidden='true')
+            .flex-grow-1(class=item.checked ? 'text-decoration-line-through text-body-secondary' : undefined)
+              span.fw-semibold= item.name
+              if item.amount
+                span.ms-2= item.amount
+            .small.text-body-secondary.text-end
+              if item.recipe_id
+                | From:#{' '}
+                a.link-secondary(href=`/recipes/${item.recipe_id}`)= item.recipe_title
+              else
+                | Added manually
+            form(method='post' action=`/shopping-list/${item.id}/delete`)
+              button.btn.btn-sm.btn-outline-danger(type='submit' aria-label=`Delete ${item.name}`) Delete
+
+      form(method='post' action='/shopping-list/clear-checked' data-confirm=`Remove ${checkedCount} checked ${checkedCount === 1 ? 'item' : 'items'} from your list?`)
+        button.btn.btn-outline-secondary(type='submit' disabled=checkedCount === 0) Clear Checked Items
+    else
+      p.text-body-secondary Your shopping list is empty.
+
+  +ingredientDatalist()

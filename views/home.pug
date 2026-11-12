@@ -32,7 +32,7 @@ block content
             h2.h5.card-title My Pantry
             p.card-text.text-body-secondary #{pantryCount} #{pantryCount === 1 ? 'item' : 'items'} in your pantry
           .card-footer.bg-transparent.border-0.pb-3
-            button.btn.btn-outline-secondary(type='button' disabled) Coming soon
+            a.btn.btn-outline-secondary(href='/pantry') Open Pantry
       .col-md-4
         .card.h-100.shadow-sm
           .card-icon.bg-butter-subtle
@@ -41,10 +41,12 @@ block content
             h2.h5.card-title Shopping List
             p.card-text.text-body-secondary #{shoppingCount} #{shoppingCount === 1 ? 'item' : 'items'} to buy
           .card-footer.bg-transparent.border-0.pb-3
-            button.btn.btn-outline-secondary(type='button' disabled) Coming soon
+            a.btn.btn-outline-secondary(href='/shopping-list') Open List
 
     section.mt-5
-      h2.h4.mb-3 Expiring This Week
+      .d-flex.justify-content-between.align-items-center.mb-3
+        h2.h4.mb-0 Expiring This Week
+        a.small(href='/pantry') Manage pantry
       .table-responsive
         table.table.align-middle.mb-0
           thead.table-light
