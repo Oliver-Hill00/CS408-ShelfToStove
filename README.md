@@ -1,5 +1,7 @@
 # CS408 ShelfToStove
 
+[![Tests](https://github.com/Oliver-Hill00/CS408-ShelfToStove/actions/workflows/test.yml/badge.svg)](https://github.com/Oliver-Hill00/CS408-ShelfToStove/actions/workflows/test.yml)
+
 Shelf-To-Stove is a recipe manager with pantry-based search: store recipes, track your pantry, and find what you can cook with what you already have. Express + SQLite on AWS EC2 behind Nginx.
 
 ## Prerequisites (install these first)
@@ -21,7 +23,21 @@ This installs dependencies, creates the SQLite database in `data/`, seeds it, an
 | `npm run db:seed` | Loads 15 recipes and 60 ingredients; skipped if recipes already exist |
 | `npm run db:seed -- --force` | Deletes existing data and reseeds |
 | `npm run db:reset` | Drops every table, recreates, and reseeds |
-| `npm test` | Runs the tests (uses an in-memory database) |
+| `npm test` | Runs the Jest + Supertest suite (uses an in-memory database) |
+
+## Tests
+
+`npm test` runs every file in `tests/`. Each file gets its own seeded in-memory database, so tests never touch real data.
+GitHub Actions runs the same command on every push and pull request, on Node 22 and 24.
+
+To run one file: `npm test -- cook`
+
+## How pantry matching works
+
+Amounts are compared in base units (mL, g, or each). Each ingredient scores `on hand / needed`, capped at 1, and
+staples always score 1. A recipe's match is the average score as a percent, and it only shows 100% when nothing is short.
+Amounts within 0.01% count as enough, because the conversion factors are rounded. Add Missing puts only
+`needed - on hand` on the shopping list. The rules are in `lib/matching.js`.
 
 ## Install on EC2
 
@@ -66,5 +82,9 @@ Troubleshooting: `sudo systemctl status shelftostove` and `journalctl -u shelfto
 | `scripts/install.sh` | EC2 step 1: system packages, Node.js 24, clone repo, npm ci |
 | `scripts/configure.sh` | EC2 step 2: .env, database, systemd service, Nginx reverse proxy |
 | `deploy/deploy.sh` | Laptop deploy: tests, then git pull and restart on the server |
+| `routes/` | One router per area: pages, recipes, search, pantry, shopping |
+| `views/` | Pug pages, sharing `layout.pug` |
+| `lib/` | Shared rules: ingredients and units, pantry matching, display formatting |
 | `start.sh` | Local setup and run |
-| `test/` | Tests run with `npm test` |
+| `tests/` | Jest + Supertest tests, run with `npm test` |
+| `.github/workflows/test.yml` | GitHub Actions: runs the tests on every push |

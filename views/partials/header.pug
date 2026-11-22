@@ -1,10 +1,9 @@
-//- Links without an href are pages from later checkpoints, shown disabled until they exist
 -
   const links = [
     { label: 'Home', href: '/' },
     { label: 'Recipes', href: '/recipes' },
-    { label: 'Search' },
-    { label: 'What Can I Cook?' },
+    { label: 'Search', href: '/search' },
+    { label: 'What Can I Cook?', href: '/cook' },
     { label: 'Pantry', href: '/pantry' },
     { label: 'Shopping List', href: '/shopping-list' },
     { label: 'About', href: '/about' },
@@ -20,8 +19,5 @@ nav.navbar.navbar-expand-lg.bg-body.border-bottom
       ul.navbar-nav.ms-auto
         each link in links
           li.nav-item
-            if link.href
-              - const active = link.href === '/' ? currentPath === '/' : currentPath.startsWith(link.href);
-              a.nav-link(href=link.href class=active ? 'active' : undefined aria-current=active ? 'page' : undefined)= link.label
-            else
-              a.nav-link.disabled(aria-disabled='true')= link.label
+            - const active = link.href === '/' ? currentPath === '/' : currentPath.startsWith(link.href);
+            a.nav-link(href=link.href class=active ? 'active' : undefined aria-current=active ? 'page' : undefined)= link.label

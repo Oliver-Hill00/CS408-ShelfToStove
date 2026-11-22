@@ -4,6 +4,7 @@ const pagesRouter = require("./routes/pages");
 const recipesRouter = require("./routes/recipes");
 const pantryRouter = require("./routes/pantry");
 const shoppingRouter = require("./routes/shopping");
+const searchRouter = require("./routes/search");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -30,6 +31,7 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use("/", pagesRouter);
+app.use("/", searchRouter);
 app.use("/recipes", recipesRouter);
 app.use("/pantry", pantryRouter);
 app.use("/shopping-list", shoppingRouter);

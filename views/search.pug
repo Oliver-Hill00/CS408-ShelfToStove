@@ -1,0 +1,64 @@
+extends layout
+include partials/recipe-photo
+
+block content
+  .container.py-4
+    h1.h2.mb-4 Search Recipes
+
+    form.card.card-body.bg-body-tertiary.mb-4(method='get' action='/search' novalidate role='search')
+      .row.g-2.align-items-start
+        .col-12.col-md-4
+          label.form-label.small.fw-semibold(for='search-q') Keyword
+          input#search-q.form-control(type='search' name='q' value=values.q maxlength='120' placeholder='e.g. rice' class=errors.q ? 'is-invalid' : undefined)
+          if errors.q
+            .invalid-feedback.d-block= errors.q
+        .col-6.col-md-3
+          label.form-label.small.fw-semibold(for='search-category') Category
+          select#search-category.form-select(name='category' class=errors.category ? 'is-invalid' : undefined)
+            option(value='') Any
+            each category in categories
+              option(value=category.id selected=String(category.id) === values.category)= category.name
+          if errors.category
+            .invalid-feedback.d-block= errors.category
+        .col-6.col-md-2
+          label.form-label.small.fw-semibold(for='search-max') Max Total Minutes
+          input#search-max.form-control(type='number' name='max' value=values.max min='0' step='1' placeholder='Any' class=errors.max ? 'is-invalid' : undefined)
+          if errors.max
+            .invalid-feedback.d-block= errors.max
+        .col-12.col-md-3
+          span.form-label.small.d-none.d-md-inline-block &nbsp;
+          .d-flex.gap-2
+            button.btn.btn-primary.flex-fill(type='submit') Search
+            a.btn.btn-outline-secondary.flex-fill(href='/search') Clear
+
+    if Object.keys(errors).length
+      .alert.alert-danger(role='alert') Please fix the highlighted fields above.
+    else if total === 0
+      p.text-body-secondary No recipes match those filters.
+    else
+      p.text-body-secondary
+        if totalPages > 1
+          | Showing #{recipes.length} of #{total} results
+        else
+          | Showing #{total} #{total === 1 ? 'result' : 'results'}
+
+      ul.list-group
+        each recipe in recipes
+          li.list-group-item.d-flex.flex-wrap.align-items-center.gap-3
+            +recipePhoto(recipe, 'recipe-thumb rounded')
+            .flex-grow-1
+              h2.h5.mb-1= recipe.title
+              span.badge.text-bg-secondary.me-2= recipe.category
+              span.small.text-body-secondary #{recipe.total_minutes} min total
+            a.btn.btn-outline-secondary(href=`/recipes/${recipe.id}` aria-label=`View ${recipe.title}`) View
+
+      if totalPages > 1
+        nav.mt-4(aria-label='Search result pages')
+          ul.pagination.justify-content-center.flex-wrap
+            li.page-item(class=page === 1 ? 'disabled' : undefined)
+              a.page-link(href=pageUrl(page - 1)) &laquo; Prev
+            - for (let n = 1; n <= totalPages; n++)
+              li.page-item(class=n === page ? 'active' : undefined)
+                a.page-link(href=pageUrl(n) aria-current=n === page ? 'page' : undefined)= n
+            li.page-item(class=page === totalPages ? 'disabled' : undefined)
+              a.page-link(href=pageUrl(page + 1)) Next &raquo;

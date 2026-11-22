@@ -1,24 +1,9 @@
 // Shopping List: add, check off, delete, clear checked, against a seeded in-memory database
-process.env.DB_PATH = ":memory:";
-
-const { test, before, after } = require("node:test");
 const assert = require("node:assert");
 const { getDb } = require("../db/db");
-const { initSchema } = require("../db/init");
-const { seed } = require("../db/seed");
-const app = require("../server");
+const { useSeededDatabase, get, post } = require("./helpers");
 
-let server;
-let baseUrl;
-
-before(() => {
-  initSchema(getDb());
-  seed(getDb());
-  server = app.listen(0);
-  baseUrl = `http://127.0.0.1:${server.address().port}`;
-});
-
-after(() => server.close());
+useSeededDatabase();
 
 const db = () => getDb();
 const items = () =>
@@ -27,12 +12,7 @@ const items = () =>
     .all();
 const itemFor = (name) => items().find((item) => item.name === name);
 
-async function post(path, fields = {}) {
-  const res = await fetch(baseUrl + path, { method: "POST", body: new URLSearchParams(fields), redirect: "manual" });
-  return { status: res.status, location: res.headers.get("location"), html: await res.text() };
-}
-
-const getPage = async (path) => (await fetch(baseUrl + path)).text();
+const getPage = async (path) => (await get(path)).html;
 
 test("the Shopping List shows each item's amount, where it came from, and checked items struck through", async () => {
   const html = await getPage("/shopping-list");
@@ -51,14 +31,14 @@ test("adding an item by hand puts it on the list", async () => {
   assert.strictEqual(location, "/shopping-list?notice=added");
   assert.strictEqual(items().length, before + 1);
   const oats = itemFor("rolled oats");
-  assert.deepStrictEqual([oats.quantity, oats.unit, oats.recipe_id, oats.checked], [2, "cup", null, 0]);
+  expect([oats.quantity, oats.unit, oats.recipe_id, oats.checked]).toEqual([2, "cup", null, 0]);
   assert.match(await getPage(location), /Added to your shopping list\./);
 });
 
 test("quantity and unit are optional for a known ingredient", async () => {
   await post("/shopping-list", { name: "lime" });
   const lime = itemFor("lime");
-  assert.deepStrictEqual([lime.quantity, lime.unit], [null, null]);
+  expect([lime.quantity, lime.unit]).toEqual([null, null]);
 });
 
 test("adding the same unbought item with the same unit increases its quantity", async () => {
@@ -112,7 +92,7 @@ test("Clear Checked Items removes only checked items", async () => {
 
   const { location } = await post("/shopping-list/clear-checked");
   assert.strictEqual(location, "/shopping-list?notice=cleared");
-  assert.deepStrictEqual(items().map((item) => item.id), unchecked);
+  expect(items().map((item) => item.id)).toEqual(unchecked);
   assert.match(await getPage("/shopping-list"), /<button class="btn btn-outline-secondary" type="submit" disabled>Clear Checked Items/);
 });
 

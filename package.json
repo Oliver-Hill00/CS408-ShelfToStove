@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test",
+    "test": "jest",
     "db:init": "node db/init.js",
     "db:seed": "node db/seed.js",
     "db:reset": "node db/init.js --reset && node db/seed.js"
@@ -20,5 +20,18 @@
     "express-validator": "^7.3.2",
     "multer": "^2.5.0",
     "pug": "^3.0.4"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^7.3.2"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "roots": [
+      "<rootDir>/tests"
+    ],
+    "setupFiles": [
+      "<rootDir>/tests/setup.js"
+    ]
   }
 }

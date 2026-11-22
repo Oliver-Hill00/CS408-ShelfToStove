@@ -5,7 +5,8 @@ const express = require("express");
 const multer = require("multer");
 const { body, validationResult } = require("express-validator");
 const { getDb } = require("../db/db");
-const { formatAmount, formatIngredient } = require("../lib/format");
+const { formatIngredient } = require("../lib/format");
+const { checkIngredients, addMissingToList } = require("../lib/matching");
 const { cleanName, unitProblem, findOrCreateIngredient, toBase, ingredientOptions } = require("../lib/ingredients");
 
 const PAGE_SIZE = 12;
@@ -23,14 +24,6 @@ const PHOTO_TYPES = [
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 1 } });
 
 const router = express.Router();
-
-// Have = enough on hand, Low = some but not enough, Missing = none. Staples always count as on hand.
-function pantryStatus(row) {
-  if (row.is_staple) return { status: "Have", note: "staple" };
-  if (!row.pantry_base) return { status: "Missing", note: "" };
-  if (row.pantry_base >= row.qty_base) return { status: "Have", note: "" };
-  return { status: "Low", note: `have ${formatAmount(row.pantry_quantity, row.pantry_unit)}` };
-}
 
 // Data the Add and Edit forms need for their dropdowns and ingredient autocomplete
 function formOptions(db) {
@@ -342,6 +335,16 @@ router.post("/:id/delete", (req, res, next) => {
   res.redirect(303, "/recipes?deleted=1");
 });
 
+// Add Missing to Shopping List: only the shortfall for each Low or Missing ingredient
+router.post("/:id/add-missing", (req, res, next) => {
+  const db = getDb();
+  const recipe = findRecipe(db, req.params.id);
+  if (!recipe) return next();
+
+  const shortCount = addMissingToList(db, recipe.id);
+  res.redirect(303, `/shopping-list?notice=${shortCount ? "shortfall" : "stocked"}`);
+});
+
 // Recipe Detail: /recipes/:id
 router.get("/:id", (req, res, next) => {
   if (!/^\d+$/.test(req.params.id)) return next();
@@ -356,17 +359,10 @@ router.get("/:id", (req, res, next) => {
     .get(req.params.id);
   if (!recipe) return next();
 
-  const ingredients = db
-    .prepare(`
-      SELECT i.name, ri.quantity, ri.unit, ri.qty_base,
-             p.quantity AS pantry_quantity, p.unit AS pantry_unit, p.qty_base AS pantry_base, p.is_staple
-      FROM recipe_ingredients ri
-      JOIN ingredients i ON i.id = ri.ingredient_id
-      LEFT JOIN pantry_items p ON p.ingredient_id = ri.ingredient_id
-      WHERE ri.recipe_id = ?
-      ORDER BY ri.rowid`)
-    .all(recipe.id)
-    .map((row) => ({ label: formatIngredient(row.quantity, row.unit, row.name), ...pantryStatus(row) }));
+  const ingredients = checkIngredients(db, recipe.id).map((row) => ({
+    ...row,
+    label: formatIngredient(row.quantity, row.unit, row.name),
+  }));
 
   res.render("recipe", {
     title: recipe.title,
@@ -374,6 +370,7 @@ router.get("/:id", (req, res, next) => {
     ingredients,
     steps: recipe.instructions.split("\n").filter((step) => step.trim()),
     saved: req.query.saved === "1",
+    hasShortfall: ingredients.some((ingredient) => ingredient.status !== "Have"),
   });
 });
 

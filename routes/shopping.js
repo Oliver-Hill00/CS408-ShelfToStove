@@ -13,6 +13,8 @@ const NOTICES = {
   merged: "That item was already on your list, so its quantity was increased.",
   deleted: "Item removed from your list.",
   cleared: "Checked items cleared.",
+  shortfall: "Your list now has what that recipe still needs.",
+  stocked: "Your pantry already has everything for that recipe.",
 };
 
 const filled = (value) => typeof value === "string" && value.trim() !== "";
@@ -87,7 +89,8 @@ router.get("/", (req, res) => {
   renderPage(res, { notice: NOTICES[req.query.notice] ?? null });
 });
 
-// Add an item by hand. If the same item with the same unit is still unbought, its quantity goes up instead.
+// Add an item by hand. If the same hand-added item with the same unit is still unbought, its quantity goes up
+// instead. Rows from a recipe are left alone, because Add Missing resets those to the recipe's shortfall.
 router.post("/", addRules, (req, res) => {
   const errors = Object.fromEntries(
     Object.entries(validationResult(req).mapped()).map(([field, error]) => [field, error.msg])
@@ -103,7 +106,7 @@ router.post("/", addRules, (req, res) => {
   const merged = db.transaction(() => {
     const ingredientId = findOrCreateIngredient(db, req.body.name, req.body.unit);
     const existing = db
-      .prepare("SELECT id, quantity FROM shopping_list_items WHERE ingredient_id = ? AND checked = 0 AND unit IS ?")
+      .prepare("SELECT id, quantity FROM shopping_list_items WHERE ingredient_id = ? AND recipe_id IS NULL AND checked = 0 AND unit IS ?")
       .get(ingredientId, unit);
     if (existing) {
       if (quantity !== null) {

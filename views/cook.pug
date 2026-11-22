@@ -1,0 +1,38 @@
+extends layout
+include partials/recipe-photo
+
+block content
+  .container.py-4
+    h1.h2 What Can I Cook?
+    p.text-body-secondary Recipes ranked by how much of each ingredient's needed amount is already in your pantry.
+
+    form.card.card-body.bg-body-tertiary.mb-4(method='get' action='/cook')
+      .d-flex.flex-wrap.align-items-center.gap-3
+        label.fw-semibold(for='min-match') Minimum match
+        input#min-match.form-range.match-range(type='range' name='min' min='0' max='100' step='1' value=minMatch)
+        output#min-match-value.fw-semibold(for='min-match')= `${minMatch}%`
+        button.btn.btn-primary(type='submit') Find Recipes
+
+    if results.length
+      ul.list-group
+        each recipe in results
+          li.list-group-item.d-flex.flex-wrap.align-items-center.gap-3
+            +recipePhoto(recipe, 'recipe-thumb rounded')
+            .flex-grow-1.match-info
+              h2.h5.mb-1= recipe.title
+              .d-flex.align-items-center.gap-2
+                .progress.flex-grow-1(role='progressbar' aria-label=`Pantry match for ${recipe.title}` aria-valuenow=recipe.match_pct aria-valuemin='0' aria-valuemax='100')
+                  .progress-bar(class=recipe.match_pct === 100 ? 'bg-success' : undefined style=`width: ${recipe.match_pct}%`)
+                span.fw-semibold.match-pct= `${recipe.match_pct}%`
+              p.small.text-body-secondary.mb-0.mt-1.missing-list= `Missing: ${recipe.missing.join(', ') || 'none'}`
+              if recipe.low.length
+                p.small.text-body-secondary.mb-0.low-list= `Low: ${recipe.low.join(', ')}`
+            .d-flex.gap-2
+              a.btn.btn-outline-secondary(href=`/recipes/${recipe.id}` aria-label=`View ${recipe.title}`) View
+              form(method='post' action=`/recipes/${recipe.id}/add-missing`)
+                button.btn.btn-outline-secondary(type='submit' disabled=recipe.match_pct === 100) Add Missing
+    else
+      p.text-body-secondary No recipes reach a #{minMatch}% match. Try a lower minimum, or add items to your pantry.
+
+block scripts
+  script(src='/js/cook.js')

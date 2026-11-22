@@ -17,7 +17,6 @@ body { background: var(--sts-cream); }
     linear-gradient(135deg, var(--sts-green), var(--sts-green-dark));
 }
 .hero-lead { max-width: 36rem; opacity: .92; }
-.hero .btn:disabled { opacity: .85; }
 
 /* Feature cards */
 .card { border: 0; }
@@ -55,3 +54,9 @@ body { background: var(--sts-cream); }
   background: #efe7d8;
   color: #a89a80;
 }
+
+/* Search and What Can I Cook? result rows */
+.recipe-thumb { flex: none; width: 7rem; height: 5rem; }
+.recipe-photo-empty.recipe-thumb { font-size: 1.75rem; }
+.match-range { flex: 1 1 12rem; width: auto; }
+.match-info { min-width: 12rem; }

@@ -1,24 +1,9 @@
 // My Pantry: add, edit, delete, expiration dates, against a seeded in-memory database
-process.env.DB_PATH = ":memory:";
-
-const { test, before, after } = require("node:test");
 const assert = require("node:assert");
 const { getDb } = require("../db/db");
-const { initSchema } = require("../db/init");
-const { seed } = require("../db/seed");
-const app = require("../server");
+const { useSeededDatabase, get, post } = require("./helpers");
 
-let server;
-let baseUrl;
-
-before(() => {
-  initSchema(getDb());
-  seed(getDb());
-  server = app.listen(0);
-  baseUrl = `http://127.0.0.1:${server.address().port}`;
-});
-
-after(() => server.close());
+useSeededDatabase();
 
 const db = () => getDb();
 const pantryCount = () => db().prepare("SELECT COUNT(*) FROM pantry_items").pluck().get();
@@ -28,12 +13,7 @@ const itemFor = (name) =>
     .get(name);
 const daysFromToday = (days) => new Date(Date.now() + days * 86400000).toISOString().slice(0, 10);
 
-async function post(path, fields) {
-  const res = await fetch(baseUrl + path, { method: "POST", body: new URLSearchParams(fields), redirect: "manual" });
-  return { status: res.status, location: res.headers.get("location"), html: await res.text() };
-}
-
-const getPage = async (path) => (await fetch(baseUrl + path)).text();
+const getPage = async (path) => (await get(path)).html;
 
 test("My Pantry lists items sorted by expiration date, with Soon and Expired badges", async () => {
   const html = await getPage("/pantry");
@@ -125,7 +105,7 @@ test("an invalid edit reopens that row's form with the errors and changes nothin
   assert.match(html, new RegExp(`<tr class="collapse show" id="edit-${banana.id}">`));
   assert.match(html, /Enter a quantity greater than 0\./);
   assert.match(html, /Use a count unit \(each, dozen\)\./);
-  assert.deepStrictEqual(itemFor("banana"), banana);
+  expect(itemFor("banana")).toEqual(banana);
 });
 
 test("deleting removes the item and recipe pages then show it as Missing", async () => {

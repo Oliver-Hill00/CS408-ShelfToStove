@@ -29,8 +29,9 @@ block content
           a.btn.btn-outline-secondary(href=`/recipes/${recipe.id}/edit`) Edit
           form(method='post' action=`/recipes/${recipe.id}/delete` data-confirm="Delete this recipe? This can't be undone.")
             button.btn.btn-outline-danger(type='submit') Delete
-          button.btn.btn-outline-secondary(type='button' disabled) Add Missing to Shopping List
-        p.small.text-body-secondary.mt-2.mb-0 Add Missing to Shopping List is coming soon.
+          form(method='post' action=`/recipes/${recipe.id}/add-missing`)
+            button.btn.btn-primary(type='submit' disabled=!hasShortfall) Add Missing to Shopping List
+        p.small.text-body-secondary.mt-2.mb-0= hasShortfall ? 'Adds only the shortfall' : 'Your pantry has everything for this recipe.'
 
     .row.g-4.mt-2
       .col-md-6

@@ -1,35 +1,21 @@
 // Every page runs against a seeded in-memory database, so real data is never touched
-process.env.DB_PATH = ":memory:";
-
-const { test, before, after } = require("node:test");
 const assert = require("node:assert");
 const { getDb } = require("../db/db");
-const { initSchema } = require("../db/init");
-const { seed } = require("../db/seed");
 const { formatQuantity, formatIngredient } = require("../lib/format");
-const app = require("../server");
+const { useSeededDatabase, get } = require("./helpers");
 
-let server;
-let baseUrl;
+useSeededDatabase();
 
-before(() => {
-  const db = getDb();
-  initSchema(db);
-  seed(db);
-  server = app.listen(0);
-  baseUrl = `http://127.0.0.1:${server.address().port}`;
-});
-
-after(() => server.close());
-
-async function getPage(path) {
-  const res = await fetch(baseUrl + path);
-  return { status: res.status, html: await res.text() };
-}
+const getPage = get;
 
 const recipeId = (title) => getDb().prepare("SELECT id FROM recipes WHERE title = ?").pluck().get(title);
 
-for (const path of ["/", "/recipes", "/recipes?page=2", "/about"]) {
+const GET_ROUTES = [
+  "/", "/recipes", "/recipes?page=2", "/recipes/new", "/recipes/1", "/recipes/1/edit",
+  "/search", "/cook", "/pantry", "/shopping-list", "/about",
+];
+
+for (const path of GET_ROUTES) {
   test(`GET ${path} returns 200 with the shared navbar and footer`, async () => {
     const { status, html } = await getPage(path);
     assert.strictEqual(status, 200);
@@ -37,6 +23,15 @@ for (const path of ["/", "/recipes", "/recipes?page=2", "/about"]) {
     assert.match(html, /<footer/);
   });
 }
+
+test("the navbar links to every page, with none disabled", async () => {
+  const { html } = await getPage("/");
+  for (const path of ["/", "/recipes", "/search", "/cook", "/pantry", "/shopping-list", "/about"]) {
+    expect(html).toMatch(new RegExp(`<a class="nav-link( active)?" href="${path}"`));
+  }
+  expect(html).not.toContain("nav-link disabled");
+  expect(html).toContain("<a class=\"btn btn-light btn-lg\" href=\"/cook\">");
+});
 
 test("Home shows counts and expiring items from the database", async () => {
   const { html } = await getPage("/");

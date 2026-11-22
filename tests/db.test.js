@@ -1,4 +1,3 @@
-const { test, beforeEach } = require("node:test");
 const assert = require("node:assert");
 const { openDb } = require("../db/db");
 const { initSchema } = require("../db/init");
@@ -17,7 +16,7 @@ test("schema creates all 7 tables and the units", () => {
     .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name")
     .pluck()
     .all();
-  assert.deepStrictEqual(tables, [
+  expect(tables).toEqual([
     "categories", "ingredients", "pantry_items", "recipe_ingredients", "recipes", "shopping_list_items", "units",
   ]);
   assert.strictEqual(count("units"), 11);
